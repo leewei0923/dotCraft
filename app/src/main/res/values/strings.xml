@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">DotCraft</string>
+    <string name="restart_btn">重新开始</string>
+    <string name="start_btn">开始游戏</string>
+</resources>
