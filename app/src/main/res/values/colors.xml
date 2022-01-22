@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorPrimary">#303F9F</color>
+    <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#D81B60</color>
     <color name="restartBtn">#6108EE</color>
     <color name="commonFontColor">#FFFFFF</color>
     <color name="dotBlack">#565652</color>
     <color name="boardBg">#878784</color>
     <color name="dotWhite">#E7E5DD</color>
+    <color name="toolBarBackgroundColor">#303F9F</color>
 </resources>
