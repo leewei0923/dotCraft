@@ -98,13 +98,7 @@ public class MainActivity extends AppCompatActivity {
         passBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (LevelUtil.hasSuccess(level)) {
-                    score++;
-                    passText.setText(String.valueOf(score));
-                    congratulations("恭喜过关");
-                } else {
-                    congratulations("不成功诶, 再试试?");
-                }
+                nextGame();
             }
         });
         // 渲染 dot 和 container
@@ -126,6 +120,26 @@ public class MainActivity extends AppCompatActivity {
     private void reStartGame() {
         startBtn.setVisibility(View.VISIBLE);
         reStartBtn.setVisibility(View.GONE);
+
+        level = new Level1();
+        score = 0;
+        passText.setText(String.valueOf(score));
+        refresh();
+    }
+
+//    leewei 22.01.26 游戏下一关
+
+    private void nextGame() {
+        if (LevelUtil.hasSuccess(level)) {
+            score++;
+            passText.setText(String.valueOf(score));
+
+            level = new LevelNext();
+            refresh();
+            congratulations("恭喜过关");
+        } else {
+            congratulations("不成功诶, 再试试?");
+        }
     }
 
 
