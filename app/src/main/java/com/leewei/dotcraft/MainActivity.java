@@ -7,7 +7,6 @@ package com.leewei.dotcraft;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -15,6 +14,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
@@ -47,6 +47,11 @@ public class MainActivity extends AppCompatActivity {
     private Level level;
     private ImageView backupDot;
 
+    //    leewei 22.01.26 通过按钮
+    private  Button passBtn;// 定义通过按钮
+    private int score = 0; // 定义分数
+    private TextView passText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +66,10 @@ public class MainActivity extends AppCompatActivity {
 
         // 2022.01.22 leewei 创建toolbar返回按钮
         backBtn = findViewById(R.id.backBtn);
+
+        // leewei 22.01.26
+        passBtn = findViewById(R.id.viaBtn); // 用于获取按钮 id viaBtn
+        passText = findViewById(R.id.passText); // 获取 TextView passtext
 
         // 2022.01.22 leewei 创建toolbar返回按钮事件
 
@@ -84,12 +93,27 @@ public class MainActivity extends AppCompatActivity {
                 reStartGame();
             }
         });
+        //    leewei 22.01.26 判断是否通过游戏 viaBtn 事件
+
+        passBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (LevelUtil.hasSuccess(level)) {
+                    score++;
+                    passText.setText(String.valueOf(score));
+                    congratulations("恭喜过关");
+                } else {
+                    congratulations("不成功诶, 再试试?");
+                }
+            }
+        });
+        // 渲染 dot 和 container
         initContainerViews();
         initDotViews();
 
     }
 
-
+    // leewei 22.01.26 开始游戏 事件
     private void startGame() {
         startBtn.setVisibility(View.GONE);
         reStartBtn.setVisibility(View.VISIBLE);
@@ -98,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
         refresh();
     }
 
+    // 游戏重置按钮
     private void reStartGame() {
         startBtn.setVisibility(View.VISIBLE);
         reStartBtn.setVisibility(View.GONE);
@@ -140,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
             if (containerArr[i] == 1) {
                 containerViewList[i].setBackgroundResource(R.drawable.shape_ring_white);
             } else {
-                containerViewList[i].setBackgroundResource(R.drawable.shape_ring_white);
+                containerViewList[i].setBackgroundResource(0);
             }
         }
 
@@ -160,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
         switch (event.getAction()) {
             // 手指按下
             case MotionEvent.ACTION_DOWN:
-                Log.d("点击事件", "onTouchEvent:点击 是" + touchIndex);
+//                Log.d("点击事件", "onTouchEvent:点击 是" + touchIndex);
                 state = STATE_IDLE;
                 lastMotionX = event.getRawX(); //触摸点相对于屏幕左边的坐标
                 lastMotionY = event.getRawY(); // 触摸点相对于屏幕顶部的坐标
@@ -172,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             // 手指滑动
             case MotionEvent.ACTION_MOVE:
-                Log.d("点击事件", "onTouchEvent:滑动 是" + touchSlop);
+//                Log.d("点击事件", "onTouchEvent:滑动 是" + touchSlop);
                 float deltaX = event.getRawX() - lastMotionX; // 偏移的距离
                 float deltaY = event.getRawY() - lastMotionY; //
 
@@ -195,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             // 手指抬起
             case MotionEvent.ACTION_UP:
-                Log.d("点击事件", "onTouchEvent:抬起 是" + touchIndex);
+//                Log.d("点击事件", "onTouchEvent:抬起 是" + touchIndex);
                 if (state == STATE_HORIZONTAL_DRAG) {
                     // 横向滑动
                     horizontalDragEnd(touchIndex / 3); // 0 第一排, 1 第二排, 2 第三排
@@ -249,20 +274,22 @@ public class MainActivity extends AppCompatActivity {
         leftDot.setTranslationX(translationX);
         middleDot.setTranslationX(translationX);
         rightDot.setTranslationX(translationX);
+// 删除 backupDot
 
         if (backupDot.getVisibility() != View.VISIBLE) {
             backupDot.setVisibility(View.VISIBLE);
         }
         if (translationX > 0) {
             // 向右滑，backup在左边出现
-            backupDot.setTranslationX(translationX - backupDot.getWidth());
-            backupDot.setImageDrawable(rightDot.getDrawable());
+            backupDot.setTranslationX(translationX - backupDot.getWidth() - 90);
+//            getDrawable()
+            backupDot.setImageDrawable(rightDot.getBackground());
         } else {
             // 向左滑，backup在右边出现
-            backupDot.setTranslationX(backupDot.getWidth() * 3 + translationX);
-            backupDot.setImageDrawable(leftDot.getDrawable());
+            backupDot.setTranslationX(backupDot.getWidth() * 3 + translationX + 360);
+            backupDot.setImageDrawable(leftDot.getBackground());
         }
-        backupDot.setTranslationY(backupDot.getHeight() * rowIndex);
+        backupDot.setTranslationY(backupDot.getHeight() * rowIndex + 115 * rowIndex);
     }
 
 
@@ -283,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
         boolean toRight = targetTranslationX > backupDot.getWidth() * 1.0f / 2;
         LevelUtil.horizontalDragLevel(level, toRight, rowIndex);
         refresh();
-//        if (LevelUtils.hasSuccess(level)) {
+//        if (LevelUtil.hasSuccess(level)) {
 //            congratulations();
 //        }
     }
@@ -303,17 +330,18 @@ public class MainActivity extends AppCompatActivity {
         middleDot.setTranslationY(translationY);
         bottomDot.setTranslationY(translationY);
         // 让backupDot 显示
+//        ---
         if (backupDot.getVisibility() != View.VISIBLE) {
             backupDot.setVisibility(View.VISIBLE);
         }
-        backupDot.setTranslationX(backupDot.getWidth() * columnIndex);
+        backupDot.setTranslationX(backupDot.getWidth() * columnIndex + 125 * columnIndex);
         if (translationY > 0) {
             // 向下滑，backup在上边出现
-            backupDot.setTranslationY(translationY - backupDot.getHeight());
+            backupDot.setTranslationY(translationY - backupDot.getHeight() - 90);
             backupDot.setImageDrawable(bottomDot.getDrawable());
         } else {
             // 向上滑，backup在下边出现
-            backupDot.setTranslationY(backupDot.getHeight() * 3 + translationY);
+            backupDot.setTranslationY(backupDot.getHeight() * 3 + translationY + 360);
             backupDot.setImageDrawable(topDot.getDrawable());
         }
     }
@@ -338,9 +366,9 @@ public class MainActivity extends AppCompatActivity {
         boolean toTop = targetTranslationY < backupDot.getWidth() * -1.0f / 2;
         LevelUtil.verticalDragLevel(level, toTop, columnIndex);
         refresh();
-        if (LevelUtil.hasSuccess(level)) {
-            congratulations();
-        }
+//        if (LevelUtil.hasSuccess(level)) {
+//            congratulations();
+//        }
     }
 
     // leewei 22.01.24 限制一次只能滑动一格
@@ -349,7 +377,9 @@ public class MainActivity extends AppCompatActivity {
         return Math.max(backupDot.getWidth() * -1, Math.min(translation, backupDot.getWidth()));
     }
 
-    private void congratulations() {
-        Toast.makeText(this, "恭喜过关", Toast.LENGTH_SHORT).show();
+    private void congratulations(String text) {
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
+
+
 }

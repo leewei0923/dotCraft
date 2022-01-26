@@ -1,19 +1,12 @@
 package com.leewei.dotcraft;
 
-public class Level1 implements Level {
+public class LevelNext implements Level{
     private final int[] dotArr = new int[9];
     private final int[] containerArr = new int[9];
 
-    public Level1() {
+    public LevelNext() {
         int[] dotRandNums = generateRandomNumber();
         int[] containerNums = generateRandomNumber();
-//        dotArr[0] = 1;
-//        dotArr[5] = 1;
-//        dotArr[7] = 1;
-//
-//        containerArr[1] = 1;
-//        containerArr[2] = 1;
-//        containerArr[3] = 1;
 
         dotArr[dotRandNums[0]] = 1;
         dotArr[dotRandNums[1]] = 1;
@@ -22,9 +15,7 @@ public class Level1 implements Level {
         containerArr[containerNums[0]] = 1;
         containerArr[containerNums[1]] = 1;
         containerArr[containerNums[2]] = 1;
-
     }
-
 
     @Override
     public int[] getDotArray() {
@@ -64,5 +55,4 @@ public class Level1 implements Level {
 
         return false;
     }
-
 }
