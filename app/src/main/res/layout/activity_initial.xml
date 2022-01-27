@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@drawable/start">
 
     <androidx.appcompat.widget.Toolbar
         android:layout_width="match_parent"
@@ -27,16 +28,31 @@
         android:layout_marginTop="150dp">
 
         <Button
+            android:id="@+id/startBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="startGame"
             android:text="开始游戏" />
 
+
         <Button
+            android:id="@+id/musicSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="音乐: 开"/>
+
+        <Button
+            android:id="@+id/exitBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="exitGame"
             android:text="退出游戏" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="关于我们"
+            android:onClick="aboutMe"/>
     </LinearLayout>
 
 

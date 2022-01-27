@@ -25,13 +25,13 @@
     </androidx.appcompat.widget.Toolbar>
 
     <TextView
-        android:id="@+id/level_title"
+        android:id="@+id/levelCount"
         android:layout_width="300dp"
         android:layout_height="40dp"
         android:layout_marginTop="20dp"
         android:layout_marginBottom="40dp"
         android:gravity="center"
-        android:text="第 1 关"
+        android:text="第1关"
         android:textColor="#000000"
         android:textSize="30dp"
         android:textStyle="bold" />
@@ -91,8 +91,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_above="@id/container4"
-            android:layout_centerHorizontal="true"
-            android:background="@drawable/shape_ring_white" />
+            android:layout_centerHorizontal="true" />
 
         <ImageView
             android:id="@+id/container4"
@@ -106,8 +105,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_below="@id/container4"
-            android:layout_centerHorizontal="true"
-            android:background="@drawable/shape_ring_white" />
+            android:layout_centerHorizontal="true" />
 
         <ImageView
             android:id="@+id/container6"
@@ -128,8 +126,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:layout_below="@id/container4"
-            android:layout_toRightOf="@id/container4"
-            android:background="@drawable/shape_ring_white" />
+            android:layout_toRightOf="@id/container4" />
 
 
         <RelativeLayout
@@ -168,7 +165,7 @@
                 android:layout_height="60dp"
                 android:layout_above="@id/dot4"
                 android:layout_centerHorizontal="true"
-                android:background="@drawable/shape_dot_white" />
+                android:background="@drawable/shape_dot_black" />
 
             <ImageView
                 android:id="@+id/dot4"
@@ -184,7 +181,7 @@
                 android:layout_height="60dp"
                 android:layout_below="@id/dot4"
                 android:layout_centerHorizontal="true"
-                android:background="@drawable/shape_dot_white" />
+                android:background="@drawable/shape_dot_black" />
 
             <ImageView
                 android:id="@+id/dot6"
@@ -208,7 +205,7 @@
                 android:layout_height="60dp"
                 android:layout_below="@id/dot4"
                 android:layout_toRightOf="@id/dot4"
-                android:background="@drawable/shape_dot_white" />
+                android:background="@drawable/shape_dot_black" />
 
             <ImageView
                 android:id="@+id/backup_dot"
@@ -233,7 +230,7 @@
             android:layout_height="50dp"
             android:layout_marginLeft="40dp"
             android:layout_marginRight="40dp"
-            android:background="@drawable/shape_bg"
+            android:background="@drawable/shape_bg_unuse"
             android:text="下一关"
             android:textColor="@color/commonFontColor"
             android:textSize="20sp" />

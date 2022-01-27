@@ -5,19 +5,31 @@
  * */
 package com.leewei.dotcraft;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
+import android.content.DialogInterface;
+import android.media.SoundPool;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.os.Handler;
 
 import androidx.appcompat.widget.Toolbar;
+
+import android.os.Vibrator;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,9 +60,21 @@ public class MainActivity extends AppCompatActivity {
     private ImageView backupDot;
 
     //    leewei 22.01.26 通过按钮
-    private  Button passBtn;// 定义通过按钮
+    private Button passBtn;// 定义通过按钮
     private int score = 0; // 定义分数
     private TextView passText;
+    private boolean isStartGame = false; // 定义游戏状态，避免未点击开始引发界面奔溃
+
+    //    leewei 22.01.27
+    // 用于按钮反馈
+    private SoundPool sp;
+    private int keyPress; // 普通按钮的提示音
+    private int effectTick; // 重要按钮提示音
+    // 用于反馈振动
+    private Vibrator vib;
+    // 实现秒表
+    private int levelCount = 1;
+    private TextView levelView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,10 +84,8 @@ public class MainActivity extends AppCompatActivity {
         // leewei 01.24 获取
         //  获取touchSlop （系统 滑动距离的最小值，大于该值可以认为滑动）
         touchSlop = ViewConfiguration.get(this).getScaledTouchSlop();
-
         startBtn = findViewById(R.id.start);
         reStartBtn = findViewById(R.id.restart);
-
         // 2022.01.22 leewei 创建toolbar返回按钮
         backBtn = findViewById(R.id.backBtn);
 
@@ -71,12 +93,17 @@ public class MainActivity extends AppCompatActivity {
         passBtn = findViewById(R.id.viaBtn); // 用于获取按钮 id viaBtn
         passText = findViewById(R.id.passText); // 获取 TextView passtext
 
+        levelView = findViewById(R.id.levelCount);
+
+
+        // leewei 22.01.22 振动
+        vib = (Vibrator) getSystemService(this.VIBRATOR_SERVICE);
         // 2022.01.22 leewei 创建toolbar返回按钮事件
 
         backBtn.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                showDialog();
             }
         });
 
@@ -98,12 +125,14 @@ public class MainActivity extends AppCompatActivity {
         passBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                nextGame();
+                if(isStartGame) nextGame();
             }
         });
         // 渲染 dot 和 container
         initContainerViews();
         initDotViews();
+        // SoundPool 初始化加载
+        initSound();
 
     }
 
@@ -111,35 +140,55 @@ public class MainActivity extends AppCompatActivity {
     private void startGame() {
         startBtn.setVisibility(View.GONE);
         reStartBtn.setVisibility(View.VISIBLE);
+        passBtn.setBackgroundResource(R.drawable.shape_bg);
+        playSound(keyPress); // 音效
 
-        level = new Level1();
+
+        vib.vibrate(50); // 振动
+        isStartGame = true; // 游戏开始为true
+        level = new Level1(); // 初始关卡
         refresh();
     }
 
     // 游戏重置按钮
     private void reStartGame() {
-        startBtn.setVisibility(View.VISIBLE);
-        reStartBtn.setVisibility(View.GONE);
-
-        level = new Level1();
-        score = 0;
+        startBtn.setVisibility(View.VISIBLE); // 开始按钮 显示
+        reStartBtn.setVisibility(View.GONE); // 重置按钮 隐藏
+        passBtn.setBackgroundResource(R.drawable.shape_bg_unuse);
+        score = 0; // 游戏结束分数重置为 0
         passText.setText(String.valueOf(score));
+        playSound(effectTick); // 音效
+        vib.vibrate(200); // 振动
+        isStartGame = false; // 游戏结束为 flase
+        levelCount = 1;
+        levelView.setText("第"+String.valueOf(levelCount)+"关");
+        level = new Level1(); // 初始关卡
+
         refresh();
     }
 
 //    leewei 22.01.26 游戏下一关
 
     private void nextGame() {
+
         if (LevelUtil.hasSuccess(level)) {
             score++;
-            passText.setText(String.valueOf(score));
-
+            levelCount++;
+            levelView.setText("第"+String.valueOf(levelCount)+"关");
+            vib.vibrate(70);
             level = new LevelNext();
             refresh();
-            congratulations("恭喜过关");
+            playSound(keyPress);
         } else {
+            playSound(effectTick);
             congratulations("不成功诶, 再试试?");
+            // leewei 22.01.27 提交不成功 分数减
+            score--;
+            vib.vibrate(100);
+            vib.vibrate(50);
         }
+
+        passText.setText(String.valueOf(score < 0 ? 0 : score));
     }
 
 
@@ -195,61 +244,65 @@ public class MainActivity extends AppCompatActivity {
     // leewei 01.24 手势事件
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-
-        switch (event.getAction()) {
-            // 手指按下
-            case MotionEvent.ACTION_DOWN:
+        if (isStartGame) {
+            switch (event.getAction()) {
+                // 手指按下
+                case MotionEvent.ACTION_DOWN:
 //                Log.d("点击事件", "onTouchEvent:点击 是" + touchIndex);
-                state = STATE_IDLE;
-                lastMotionX = event.getRawX(); //触摸点相对于屏幕左边的坐标
-                lastMotionY = event.getRawY(); // 触摸点相对于屏幕顶部的坐标
-                touchIndex = getTochImageviewIndex(lastMotionX, lastMotionY);
+                    state = STATE_IDLE;
+                    lastMotionX = event.getRawX(); //触摸点相对于屏幕左边的坐标
+                    lastMotionY = event.getRawY(); // 触摸点相对于屏幕顶部的坐标
+                    touchIndex = getTochImageviewIndex(lastMotionX, lastMotionY);
 
-                if (touchIndex != -1) {
-                    state = STATE_WATING_DRAG;
-                }
-                break;
-            // 手指滑动
-            case MotionEvent.ACTION_MOVE:
-//                Log.d("点击事件", "onTouchEvent:滑动 是" + touchSlop);
-                float deltaX = event.getRawX() - lastMotionX; // 偏移的距离
-                float deltaY = event.getRawY() - lastMotionY; //
-
-                if (state == STATE_WATING_DRAG) {
-                    if (Math.abs(deltaX) >= touchSlop || Math.abs(deltaY) >= touchSlop) {
-                        state = Math.abs(deltaX) > Math.abs(deltaY) ? STATE_HORIZONTAL_DRAG : STATE_VERTICAL_DRAG;
+                    if (touchIndex != -1) {
+                        state = STATE_WATING_DRAG;
                     }
-                }
-                if (state == STATE_HORIZONTAL_DRAG) {
+                    break;
+                // 手指滑动
+                case MotionEvent.ACTION_MOVE:
+//                Log.d("点击事件", "onTouchEvent:滑动 是" + touchSlop);
+                    float deltaX = event.getRawX() - lastMotionX; // 偏移的距离
+                    float deltaY = event.getRawY() - lastMotionY; //
 
-                    horizontalDraging(touchIndex / 3, deltaX);
-                }
+                    if (state == STATE_WATING_DRAG) {
+                        if (Math.abs(deltaX) >= touchSlop || Math.abs(deltaY) >= touchSlop) {
+                            state = Math.abs(deltaX) > Math.abs(deltaY) ? STATE_HORIZONTAL_DRAG : STATE_VERTICAL_DRAG;
+                        }
+                    }
+                    if (state == STATE_HORIZONTAL_DRAG) {
 
-                if (state == STATE_VERTICAL_DRAG) {
-                    verticalDraging(touchIndex % 3, deltaY);
-                }
+                        horizontalDraging(touchIndex / 3, deltaX);
+                    }
 
-                lastMotionX = event.getRawX();
-                lastMotionY = event.getRawY();
-                break;
-            // 手指抬起
-            case MotionEvent.ACTION_UP:
+                    if (state == STATE_VERTICAL_DRAG) {
+                        verticalDraging(touchIndex % 3, deltaY);
+                    }
+
+                    lastMotionX = event.getRawX();
+                    lastMotionY = event.getRawY();
+                    break;
+                // 手指抬起
+                case MotionEvent.ACTION_UP:
 //                Log.d("点击事件", "onTouchEvent:抬起 是" + touchIndex);
-                if (state == STATE_HORIZONTAL_DRAG) {
-                    // 横向滑动
-                    horizontalDragEnd(touchIndex / 3); // 0 第一排, 1 第二排, 2 第三排
-                } else if (state == STATE_VERTICAL_DRAG) {
-                    // 纵向滑动
-                    verticalDragEnd(touchIndex % 3);
-                }
-                touchIndex = -1;
-                state = STATE_IDLE;
-                break;
+                    if (state == STATE_HORIZONTAL_DRAG) {
+                        // 横向滑动
+                        horizontalDragEnd(touchIndex / 3); // 0 第一排, 1 第二排, 2 第三排
+                    } else if (state == STATE_VERTICAL_DRAG) {
+                        // 纵向滑动
+                        verticalDragEnd(touchIndex % 3);
+                    }
+                    touchIndex = -1;
+                    state = STATE_IDLE;
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
 
+            }
+        } else {
+            congratulations("请点击开始游戏");
         }
+
         return super.onTouchEvent(event);
     }
 
@@ -380,9 +433,6 @@ public class MainActivity extends AppCompatActivity {
         boolean toTop = targetTranslationY < backupDot.getWidth() * -1.0f / 2;
         LevelUtil.verticalDragLevel(level, toTop, columnIndex);
         refresh();
-//        if (LevelUtil.hasSuccess(level)) {
-//            congratulations();
-//        }
     }
 
     // leewei 22.01.24 限制一次只能滑动一格
@@ -395,5 +445,44 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
 
+    // leewei 01.27 按钮声音设置
+    @SuppressLint("newmusic")
+    private void initSound() {
+        sp = new SoundPool.Builder().build();
+        keyPress = sp.load(this, R.raw.keypress, 1);
+        effectTick = sp.load(this, R.raw.effecttick, 2);
+    }
+
+    private void playSound(int soundId) {
+        sp.play(soundId,
+                0.1f,   //左耳道音量【0~1】
+                0.5f,   //右耳道音量【0~1】
+                0,  //播放优先级【0表示最低优先级】
+                1,  //循环模式【0表示循环一次，-1表示一直循环，其他表示数字+1表示当前数字对应的循环次数】
+                1);  //播放速度【1是正常，范围从0~2】
+    }
+
+    // leewei 22.01.27 dialog
+
+    private void showDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setIcon(R.mipmap.ic_launcher)
+                .setTitle("提示框")
+                .setMessage("确定要退出?")
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        congratulations("取消");
+                    }
+                })
+                .create()
+                .show();
+    }
 
 }
