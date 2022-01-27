@@ -126,7 +126,6 @@ public class InitialActivity extends AppCompatActivity {
         sp = new SoundPool.Builder().build();
         keyPress = sp.load(this, R.raw.keypress, 1);
         effectTick = sp.load(this, R.raw.effecttick, 2);
-        initial = sp.load(this, R.raw.initial, 2);
     }
 
     private void playSound(int soundId, int loop) {
